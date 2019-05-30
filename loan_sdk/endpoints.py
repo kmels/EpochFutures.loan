@@ -30,19 +30,29 @@ parameters = {
     'interest_rates': {},
     'issuances': { 'limit': 100 },
     'supply-volume': {'intervalType': "Day"},
-    'borrow-volume': {'intervalType': "Day"}
+    'borrow-volume': {'intervalType': "Day"},
+    'repayment-volume': {'intervalType': "Day"}
 }
 protocols = ['Dharma','MakerDao','Compound','CompoundV2']
 urls = {
     'agreements': "https://api.loanscan.io/v1/agreements",
     'interest_rates': "https://api.loanscan.io/v1/interest-rates",
     'issuances': "https://api.loanscan.io/v1/issuances",
-    'supply-volume': 'https://api.loanscan.io/v1/stats/supply-volume'
+    'supply-volume': 'https://api.loanscan.io/v1/stats/supply-volume',
+    'borrow-volume': 'https://api.loanscan.io/v1/stats/borrow-volume',
+    'repayment-volume': 'https://api.loanscan.io/v1/stats/repayment-volume'
 }
 
 import requests
 import json
 from datetime import datetime
+
+class ForbiddenAccess(Exception):
+    status_code = 403
+    def __init__(self, endpoint, message="Forbidden accesss"):
+        Exception.__init__(self)
+        self.message = message
+        self.endpoint = endpoint
 
 def get_response(endpoint, page = 1) -> dict:
     limit = parameters[endpoint].get('limit')
@@ -61,7 +71,10 @@ def get_response(endpoint, page = 1) -> dict:
     text = response.content
     if len(text) == 0:
         return {}
-    print(len(text), " bytes")
+    print(len(text), "bytes")
+    if response.status_code == requests.codes.forbidden:
+        raise ForbiddenAccess(endpoint, "Forbidden access")
+    
     payload = json.loads(text)
 
     if page and limit:
@@ -76,7 +89,6 @@ def mark_event(endpoint):
     print("Inserting one ", endpoint, " ...")
     db[endpoint].insert_one(snapshot)
 
-# Used for time series
 def scan_history(endpoint, page_n, stop_criteria):
     page = get_response(endpoint, page_n)
     page_items = page['dataSlice']
@@ -95,7 +107,7 @@ def scan_history(endpoint, page_n, stop_criteria):
     if not end:
         scan_history(endpoint, page_n + 1, stop_criteria)
 
-def scan_stats(endpoint, page_n, stop_criteria):
+def scan_stats(endpoint, page_n, stop_criteria, sort_key = 'date'):
     print("Scanning stats ... ")
     page = get_response(endpoint, page_n)
     page_items = page
@@ -105,8 +117,12 @@ def scan_stats(endpoint, page_n, stop_criteria):
     for item in page_items:
         if not item:
             continue
+        item_type = type(item)
+
+        assert(item_type is dict, "Wrong item type. Expected: dict. Actual: ", item_type)
+        
         if stop_criteria(item):
-            print("Stopping @ ", item['date'])
+            print("Stopping @ ", item[sort_key])
             end = True
             return
         else:
@@ -118,37 +134,30 @@ def scan_stats(endpoint, page_n, stop_criteria):
     #    scan_stats(endpoint, page_n + 1, stop_criteria)
 
 import pymongo
-def download_issuances():
-    """Returns sorted by date"""
-    endpoint = 'issuances'
-    stop_at = "1970-01-01T00:00:00Z" # first record ever
-    _newest = db[endpoint].find({}).sort("creationTime", pymongo.DESCENDING).limit(1)
-    for i in _newest:
-        stop_at = i['creationTime']
-    print("Stop at ", stop_at)
-    scan_history(endpoint, page_n = 1,
-        stop_criteria = lambda it: it['creationTime'] <= stop_at)
 
-def download_agreements():
-    """Returns sorted by date"""
-    endpoint = 'agreements'
-    stop_at = "1970-01-01T00:00:00Z" # first record ever
-    _newest = db[endpoint].find({}).sort("creationTime", pymongo.DESCENDING).limit(1)
+def get_latest_record_dot(endpoint, sort_key = "creationTime") -> str:
+    stop_at = "1970-01-01T00:00:00Z" # first record ever possible
+    _newest = db[endpoint].find({}).sort(sort_key, pymongo.DESCENDING).limit(1)
     for i in _newest:
-        stop_at = i['creationTime']
-    print("Stop at ", stop_at)
+        stop_at = i[sort_key]
+    print(endpoint, " stops at ", stop_at)
+    return stop_at
+
+def download_history(endpoint, sort_key = "creationTime"):
+    print("Downloading ", endpoint, " history ...")
+    latest_dot = get_latest_record_dot(endpoint, sort_key)
     scan_history(endpoint, page_n = 1,
-        stop_criteria = lambda it: it['creationTime'] <= stop_at)
+        stop_criteria = lambda it: it[sort_key] <= stop_at)
 
 def download_volume(endpoint):
-    stop_at = "1970-01-01T00:00:00Z" # first record ever
-    _newest = list(db[endpoint].find({}).sort("date", pymongo.DESCENDING).limit(1))
-    print("Download volume ", endpoint, "...",len(_newest))
-    for i in _newest:
-        stop_at = i['date']
+    print("Downloading ", endpoint, " volume ...")
+    
+    stop_at = get_latest_record_dot(endpoint, 'date')
+
     for protocol in protocols:
         print(protocol," Stop at ", stop_at)
         parameters[endpoint]['protocol'] = protocol
         scan_stats(endpoint, page_n = 1,
             stop_criteria = lambda it: it['date'] <= stop_at)
         del parameters[endpoint]['protocol']
+
