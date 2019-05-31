@@ -145,7 +145,7 @@ def get_latest_record_dot(endpoint, sort_key = "creationTime") -> str:
 
 def download_history(endpoint, sort_key = "creationTime"):
     print("Downloading ", endpoint, " history ...")
-    latest_dot = get_latest_record_dot(endpoint, sort_key)
+    stop_at = get_latest_record_dot(endpoint, sort_key)
     scan_history(endpoint, page_n = 1,
         stop_criteria = lambda it: it[sort_key] <= stop_at)
 
