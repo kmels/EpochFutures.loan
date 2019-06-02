@@ -1,4 +1,5 @@
 MONGO_HOST = '127.0.0.1'
 MONGO_PORT = 27017
 MONGO_DBNAME = 'loanspread'
-API_KEY = "****"
+API_KEY = "NQ8riNmuSy9iERtEOsSMY3Cqj4mC9gD67YPqtelr"
+

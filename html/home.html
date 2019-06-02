@@ -26,54 +26,72 @@
 	<button id="addData">Add Data</button>
 	<button id="removeData">Remove Data</button>
 	<script type="text/javascript">
-	        var MONTHS = ["1 DAY","7 DAY","15 DAY","21 DAY","30 DAY","45 DAY","60 DAY","90 DAY","120 DAY","150 DAY","180 DAY","210 DAY","240 DAY","270 DAY","360 DAY"];
+	  var MONTHS = ["30 MINUTE","1 HOUR","2 HOUR","1 DAY", "30 DAY","45 DAY","60 DAY","90 DAY","180 DAY"];
 		var config = {
 			type: 'line',
 			data: {
-			        labels: MONTHS,
+			    labels: MONTHS,
 				datasets: [{
-					label: 'Yesterday',
+					label: '1h ago',
+					fill: false,
 					backgroundColor: window.chartColors.red,
 					borderColor: window.chartColors.red,
-  			                data: {{curves[1]}},
-					fill: false,
+					data: {{curves[3600]}},
 				}, {
-					label: '1 week ago',
+					label: '2h ago',
 					fill: false,
-					backgroundColor: window.chartColors.blue,
-					borderColor: window.chartColors.blue,
-					data: {{curves[7]}},
+					backgroundColor: window.chartColors.orange,
+					borderColor: window.chartColors.orange,
+					data: {{curves[7200]}},
 				}, {
-					label: '2 week ago',
+					label: '24h ago',
 					fill: false,
 					backgroundColor: window.chartColors.yellow,
 					borderColor: window.chartColors.yellow,
-					data: {{curves[15]}},
+					data: {{curves[86400]}},
 				}, {
-					label: '3 weeks ago',
-					fill: false,
-					backgroundColor: window.chartColors.cyan,
-					borderColor: window.chartColors.cyan,
-					data: {{curves[15]}},
-				}, {
-					label: '1 month ago',
+					label: '7d ago',
 					fill: false,
 					backgroundColor: window.chartColors.green,
 					borderColor: window.chartColors.green,
-					data: {{curves[30]}},
+					data: {{curves[604800]}},
 				}, {
-					label: '3 months ago',
+					label: '15d ago',
+					fill: false,
+					backgroundColor: window.chartColors.blue,
+					borderColor: window.chartColors.blue,
+					data: {{curves[1296000]}},
+				}, {
+					label: '21d ago',
+					fill: false,
+					backgroundColor: window.chartColors.purple,
+					borderColor: window.chartColors.purple,
+					data: {{curves[1814400]}},
+				}, {
+					label: '30d ago',
+					fill: false,
+					backgroundColor: window.chartColors.gray,
+					borderColor: window.chartColors.gray,
+					data: {{curves[2592000]}},
+				}, {
+					label: '60d ago',
 					fill: false,
 					backgroundColor: window.chartColors.black,
 					borderColor: window.chartColors.black,
-					data: {{curves[90]}},
+					data: {{curves[5184000]}},
+				}, {
+					label: '90d ago',
+					fill: false,
+					backgroundColor: window.chartColors.coffee,
+					borderColor: window.chartColors.coffee,
+					data: {{curves[15552000]}},
 				}]
 			},
 			options: {
 				responsive: true,
 				title: {
 					display: true,
-					text: 'Loanscan.io Yield Curve'
+					text: 'Loanscan.io Yield Curves'
 				},
 				tooltips: {
 					mode: 'index',
