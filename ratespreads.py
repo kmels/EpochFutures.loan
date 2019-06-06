@@ -58,8 +58,18 @@ def yield_agreement_data(protocol,symbol):
     yield_data = [(agreement["loanProtocol"], agreement["tokenSymbol"],datetime.strptime(agreement["creationTime"],date_format), agreement["interestRate"],
                    term_minutes(agreement["loanTerm"]), datetime.strptime(agreement["maturityDate"], date_format)) for agreement in agreements]
 
-    return [y for y in yield_data if y[1] == symbol and y[0] == protocol]
-
+    if symbol == "*" and protocol == "*":
+        return yield_data
+    
+    if symbol != "*" and protocol != "*":
+        return [y for y in yield_data if y[1] == symbol and y[0] == protocol]
+    
+    if symbol == "*":
+        return [y for y in yield_data if y[0] == protocol]
+    
+    if protocol == "*":
+        return [y for y in yield_data if y[1] == symbol]
+    
 def empty_cache():
     print("Clearing cache")
     yield_agreement_data.cache_clear()
@@ -76,35 +86,36 @@ def yield_curve(protocol, symbol):
     timespot_diffs = [timedelta(minutes=30), timedelta(hours=1), timedelta(hours=2), timedelta(days=1), timedelta(days=7), timedelta(days=15), timedelta(days=21), timedelta(days=28), timedelta(days=30), timedelta(days=60), timedelta(days=90), timedelta(days=180), timedelta(days=360)]
     time_now = datetime.utcnow()
 
-    yields = {}
+    epochs = {}
     for d in timespot_diffs:
-        yields[int(d.total_seconds())] = []
+        epochs[int(d.total_seconds())] = []
 
     print("Getting curves...")
-    maturities = list(yields.keys())
+    maturities = [3600, 7200, 86400, 86400*28, 86400*30, 86400*90, 86400*180]
     
     for ti, delta in enumerate(timespot_diffs[0:-1]):
         timespot = time_now - delta
-        maturity = int(delta.total_seconds())
+        time_ago = int(delta.total_seconds())
         next_timespot = time_now - timespot_diffs[ti+1]
-        agreements_before = [y for y in yield_data if y[2] <= timespot and y[2] > next_timespot]
+        agreements_before = [y for y in yield_data if y[2] <= timespot] #y[2] is creation time
         age_sorted = sorted(agreements_before, key = lambda y: y[2], reverse=True)
-        maturity_sorted = sorted(age_sorted, key=lambda y: y[4])
+        
+        time_ago_sorted = sorted(age_sorted, key=lambda y: y[4]) #y[4] is loan term
                 
-        for i, m in enumerate(maturities[0:-1]):
-            curve_points = [y for y in maturity_sorted if m <= y[4] and y[4] < maturities[i+1]]
+        for m in maturities:
+            curve_points = [(60*y[4],y[3]) for y in time_ago_sorted if m == 60*y[4]] # m is seconds, y[4] is minutes
             if len(curve_points) == 0:
-                yields[maturity].append(0)
-                continue            
+                epochs[time_ago].append(0)
+                continue
             
-            same_maturity_dots = [y for y in curve_points if y == m]
-            if len(same_maturity_dots) > 0:
-                avg = 1.0*sum([c[3] for c in same_dots_dots]) / len(same_maturity_dots)            
-                yields[maturity].append( avg*10000 )
+            same_time_ago_dots = [y for y in curve_points if y[0] == m]
+            if len(same_time_ago_dots) > 0:
+                avg = 1.0*sum([c[1] for c in same_time_ago_dots]) / len(same_time_ago_dots)
+                epochs[time_ago].append( avg*10000 ) # converto decimal to basis points (1% = 0.01 = 100 bps )
             else:
-                yields[maturity].append( curve_points[0][3]*10000)
-
-    return render_template('home.html', curves=yields, maturity_days=maturities)
+                epochs[time_ago].append( curve_points[0][1]*10000)
+        
+    return render_template('home.html', curves=epochs, time_ago_days=maturities)
 
 from datetime import *
 
