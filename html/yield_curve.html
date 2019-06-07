@@ -21,65 +21,25 @@
 	<br>
 	<br>
 	<script type="text/javascript">
+      var colors = [window.chartColors.red, window.chartColors.orange,
+                    window.chartColors.yellow, window.chartColors.green,
+                    window.chartColors.blue, window.chartColors.purple]
+      
 	  var config = {
 		  type: 'line',
 		  data: {
 			  labels: {{terms|safe}},
-			  datasets: [{
-				  label: '1h ago',
-				  fill: false,
-				  backgroundColor: window.chartColors.red,
-				  borderColor: window.chartColors.red,
-				  data: {{curves[3600]}},
-			  }, {
-				  label: '2h ago',
-				  fill: false,
-				  backgroundColor: window.chartColors.orange,
-				  borderColor: window.chartColors.orange,
-				  data: {{curves[7200]}},
-			  }, {
-				  label: '24h ago',
-				  fill: false,
-				  backgroundColor: window.chartColors.yellow,
-				  borderColor: window.chartColors.yellow,
-				  data: {{curves[86400]}},
-			  }, {
-				  label: '7d ago',
-				  fill: false,
-				  backgroundColor: window.chartColors.green,
-				  borderColor: window.chartColors.green,
-				  data: {{curves[604800]}},
-			  }, {
-				  label: '15d ago',
-				  fill: false,
-				  backgroundColor: window.chartColors.blue,
-				  borderColor: window.chartColors.blue,
-				  data: {{curves[1296000]}},
-			  }, {
-				  label: '21d ago',
-				  fill: false,
-				  backgroundColor: window.chartColors.purple,
-				  borderColor: window.chartColors.purple,
-				  data: {{curves[1814400]}},
-			  }, {
-				  label: '30d ago',
-				  fill: false,
-				  backgroundColor: window.chartColors.gray,
-				  borderColor: window.chartColors.gray,
-				  data: {{curves[2592000]}},
-			  }, {
-				  label: '60d ago',
-				  fill: false,
-				  backgroundColor: window.chartColors.black,
-				  borderColor: window.chartColors.black,
-				  data: {{curves[5184000]}},
-			  }, {
-				  label: '90d ago',
-				  fill: false,
-				  backgroundColor: window.chartColors.coffee,
-				  borderColor: window.chartColors.coffee,
-				  data: {{curves[15552000]}},
-			  }]
+			  datasets: [
+                  {% for k,v in curves.items(): %}
+                  {
+                      label: '{{k}}',
+                      fill: false,
+                      data: {{v|safe}},
+                      backgroundColor : colors[{{loop.index0}}],
+                      borderColor : colors[{{loop.index0}}]
+                  },
+                      {% endfor %}
+              ]
 		  },
 		  options: {
 			  responsive: true,

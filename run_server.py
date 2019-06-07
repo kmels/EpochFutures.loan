@@ -35,7 +35,10 @@ app = Flask(__name__, template_folder='html', static_url_path='/static')
 import pymongo
 
 def term_pretty(seconds):
+    hour = 3600
     day = 3600*24
+    if seconds < hour:
+        return "%dm" % (seconds/60)
     if seconds < day:
         return "%dh" % (seconds/3600)
     return "%dd" % (seconds/day)
@@ -89,7 +92,8 @@ def yield_curve(protocol, symbol):
     print("Sorted yields .. ")
     print([y[2].strftime(date_format) for y in sorted(yield_data, key=lambda x: x[2])[0:5]])
     print("Getting deltas...")
-    timespot_diffs = [timedelta(minutes=30), timedelta(hours=1), timedelta(hours=2), timedelta(days=1), timedelta(days=7), timedelta(days=15), timedelta(days=21), timedelta(days=28), timedelta(days=30), timedelta(days=60), timedelta(days=90), timedelta(days=180), timedelta(days=360)]
+    timespot_diffs = [timedelta(hours=1), timedelta(hours=2), timedelta(hours=4), timedelta(days=1), timedelta(days=7)]
+    #timespot_diffs = [timedelta(minutes=30), timedelta(hours=1), timedelta(hours=2), timedelta(days=1), timedelta(days=7), timedelta(days=15), timedelta(days=21), timedelta(days=28), timedelta(days=30), timedelta(days=60), timedelta(days=90), timedelta(days=180), timedelta(days=360)]
     time_now = datetime.utcnow()
 
     epochs = {}
@@ -122,7 +126,9 @@ def yield_curve(protocol, symbol):
                 epochs[time_ago].append( curve_points[0][1]*10000)
 
     ts = ",".join([repr(term_pretty(t)) for t in maturities])
-    return render_template('yield_curve.html', terms="[%s]" % ts , curves=epochs, time_ago_days=maturities)
+    es = ",".join([repr(term_pretty(t)) for t in epochs.keys()])
+    epochs = dict((term_pretty(k) + " ago", val) for k, val in epochs.items())
+    return render_template('yield_curve.html', terms="[%s]" % ts , epochs="[%s]" % es, curves=epochs, time_ago_days=maturities)
 
 from datetime import *
 
