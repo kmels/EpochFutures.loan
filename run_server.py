@@ -147,5 +147,10 @@ def rate_curve(protocol, symbol):
 
     return render_template('rate_spread.html', borrow_dots=",".join(map(str,borrow_curve_dots)), supply_dots=",".join(map(str, supply_curve_dots)))
 
+@app.route("/")
+def index():
+    coin_list = list(db.agreements.distinct("tokenSymbol"))
+    return render_template('index.html', coin_list = enumerate(coin_list))
+    
 if __name__ == "__main__":
     app.run(debug=True)
