@@ -34,6 +34,12 @@ app = Flask(__name__, template_folder='html', static_url_path='/static')
 
 import pymongo
 
+def term_pretty(seconds):
+    day = 3600*24
+    if seconds < day:
+        return "%dh" % (seconds/3600)
+    return "%dd" % (seconds/day)
+
 def term_minutes(term):
     parts = term.split(".")
     
@@ -114,8 +120,9 @@ def yield_curve(protocol, symbol):
                 epochs[time_ago].append( avg*10000 ) # converto decimal to basis points (1% = 0.01 = 100 bps )
             else:
                 epochs[time_ago].append( curve_points[0][1]*10000)
-        
-    return render_template('home.html', curves=epochs, time_ago_days=maturities)
+
+    ts = ",".join([repr(term_pretty(t)) for t in maturities])
+    return render_template('yield_curve.html', terms="[%s]" % ts , curves=epochs, time_ago_days=maturities)
 
 from datetime import *
 
