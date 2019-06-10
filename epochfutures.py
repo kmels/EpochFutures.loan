@@ -85,15 +85,19 @@ def empty_cache():
 
 sched.add_job(empty_cache,'interval',minutes=240)
 
-@app.route("/yield_curve/<protocol>/<symbol>")
-def yield_curve(protocol, symbol):
+
+def yield_plot(protocol, symbol, plot_past = True):
     yield_data = yield_agreement_data(protocol,symbol)
 
     print("Sorted yields .. ")
     print([y[2].strftime(date_format) for y in sorted(yield_data, key=lambda x: x[2])[0:5]])
     print("Getting deltas...")
-    timespot_diffs = [timedelta(hours=1), timedelta(hours=2), timedelta(hours=4), timedelta(days=1), timedelta(days=7)]
-    #timespot_diffs = [timedelta(minutes=30), timedelta(hours=1), timedelta(hours=2), timedelta(days=1), timedelta(days=7), timedelta(days=15), timedelta(days=21), timedelta(days=28), timedelta(days=30), timedelta(days=60), timedelta(days=90), timedelta(days=180), timedelta(days=360)]
+
+    if plot_past:
+        timespot_diffs = [timedelta(hours=1), timedelta(hours=2), timedelta(hours=4), timedelta(days=1), timedelta(days=7)]
+    else:
+        timespot_diffs = [timedelta(seconds=0)]
+
     time_now = datetime.utcnow()
 
     epochs = {}
@@ -124,6 +128,11 @@ def yield_curve(protocol, symbol):
                 epochs[time_ago].append( avg*10000 ) # converto decimal to basis points (1% = 0.01 = 100 bps )
             else:
                 epochs[time_ago].append( curve_points[0][1]*10000)
+    return (epochs, maturities)
+
+@app.route("/yield_curve/<protocol>/<symbol>")
+def yield_curve(protocol, symbol):
+    epochs, maturities = yield_plot(protocol, symbol)
 
     ts = ",".join([repr(term_pretty(t)) for t in maturities])
     es = ",".join([repr(term_pretty(t)) for t in epochs.keys()])
@@ -162,8 +171,20 @@ def rate_curve(protocol, symbol):
 
 @app.route("/")
 def index():
-    coin_list = list(db.agreements.distinct("tokenSymbol"))
-    return render_template('index.html', coin_list = enumerate(coin_list))
+    coin_list = []
+
+    coins = list(db.agreements.distinct("tokenSymbol"))
+
+    for coin in coins:
+        epochs, maturities = yield_plot("*", coin)
+        ts = ",".join([repr(term_pretty(t)) for t in maturities])
+        es = ",".join([repr(term_pretty(t)) for t in epochs.keys()])
+        epochs = dict((term_pretty(k) + " ago", val) for k, val in epochs.items())
+
+        coin_list.append((coin, epochs, maturities, ts, es))
+
+        #return render_template('yield_curve.html', terms="[%s]" % ts , epochs="[%s]" % es, curves=epochs, time_ago_days=maturities)
+    return render_template('index.html', coin_list = coin_list)
     
 if __name__ == "__main__":
     app.run(debug=True)
