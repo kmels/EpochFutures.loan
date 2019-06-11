@@ -12,9 +12,12 @@ def yield_agreement_data():
     def collateral(agreement):
         colat = agreement.get('effectiveCollateral', {})
         return f"{colat.get('currentAmount', '')} {colat.get('tokenSymbol', '')}"
+    def principal(agreement):
+        issuances = agreement.get('issuances',[])
+        return ",".join([f"{i.get('principal','')} {i.get('tokenSymbol','')}" for i in issuances])
 
-    yield_data = [(agreement["loanProtocol"], agreement["tokenSymbol"],datetime.strptime(agreement["creationTime"],date_format), agreement["interestRate"],
-                   term_minutes(agreement["loanTerm"]), datetime.strptime(agreement["maturityDate"], date_format), collateral(agreement)) for agreement in agreements]
+    yield_data = [(a["loanProtocol"], a["tokenSymbol"],datetime.strptime(a["creationTime"],date_format), a["interestRate"],
+                   term_seconds(a["loanTerm"]), datetime.strptime(a["maturityDate"], date_format), collateral(a), principal(a)) for a in agreements]
     
     return yield_data
     

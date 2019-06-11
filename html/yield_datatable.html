@@ -5,10 +5,11 @@
       <th>Protocol</th>
       <th>Symbol</th>
       <th>Agreement time</th>
+      <th>Maturity date</th>
       <th>Interest rate</th>
       <th>Loan term</th>
-      <th>Maturity date</th>
       <th>Collateral</th>
+      <th>Principal</th>
     </tr>
   </thead>
   <tbody>
@@ -18,10 +19,11 @@
       <td>{{ag[0]}}</td>
       <td>{{ag[1]}}</td>
       <td>{{ag[2]}}</td>
-      <td>{{ag[3]}}</td>
-      <td>{{ag[4]}}</td>
       <td>{{ag[5]}}</td>
+      <td>{{ag[3]}}</td>
+      <td>{{term_pretty(ag[4])}}</td>
       <td>{{ag[6]}}</td>
+      <td>{{ag[7]}}</td>
     </tr>
     {% endfor %}
   </tbody>
@@ -34,6 +36,7 @@
       <th>Loan term</th>
       <th>Maturity date</th>
       <th>Collateral</th>
+      <th>Principal</th>
     </tr>
   </tfoot>
 </table>

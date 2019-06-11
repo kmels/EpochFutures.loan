@@ -1,5 +1,3 @@
-
-
 def term_pretty(seconds):
     hour = 3600
     day = 3600*24
@@ -9,7 +7,7 @@ def term_pretty(seconds):
         return "%dh" % (seconds/3600)
     return "%dd" % (seconds/day)
 
-def term_minutes(term):
+def term_seconds(term):
     parts = term.split(".")
     
     if len(parts) == 1:
@@ -22,4 +20,4 @@ def term_minutes(term):
     hours = int(subparts[0])
     minutes = int(subparts[1])
         
-    return days*1440 + hours*60 + minutes
+    return (days*1440 + hours*60 + minutes)*60
