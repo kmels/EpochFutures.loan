@@ -56,10 +56,10 @@ def yield_plot(protocol, symbol, plot_past = True):
     print("Getting curves...")
     maturities = [3600, 7200, 86400, 86400*28, 86400*30, 86400*90, 86400*180]
     
-    for ti, delta in enumerate(timespot_diffs[0:-1]):
+    for delta in timespot_diffs:
         timespot = time_now - delta
         time_ago = int(delta.total_seconds())
-        next_timespot = time_now - timespot_diffs[ti+1]
+
         agreements_before = [y for y in yield_data if y[2] <= timespot] #y[2] is creation time
         age_sorted = sorted(agreements_before, key = lambda y: y[2], reverse=True)
         
@@ -81,7 +81,7 @@ def yield_plot(protocol, symbol, plot_past = True):
 
 @app.route("/yield_curve/<protocol>/<symbol>")
 def yield_curve(protocol, symbol):
-    epochs, maturities = yield_plot(protocol, symbol)
+    epochs, maturities = yield_plot(protocol, symbol, plot_past = True)
 
     ts = ",".join([repr(term_pretty(t)) for t in maturities])
     es = ",".join([repr(term_pretty(t)) for t in epochs.keys()])
@@ -123,7 +123,7 @@ def index():
     coins = list(DB.agreements.distinct("tokenSymbol"))
 
     for coin in coins:
-        epochs, maturities = yield_plot("*", coin)
+        epochs, maturities = yield_plot("*", coin, plot_past = False)
         ts = ",".join([repr(term_pretty(t)) for t in maturities])
         es = ",".join([repr(term_pretty(t)) for t in epochs.keys()])
         epochs = dict((term_pretty(k) + " ago", val) for k, val in epochs.items())

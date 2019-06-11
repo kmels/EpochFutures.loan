@@ -26,8 +26,6 @@
 
 <!-- todo twitter -->
 <meta name="twitter:card" content="summary">
-<meta name="twitter:site" content="@epochfutures">
-<meta name="twitter:creator" content="@epochfutures">
 <meta name="twitter:title" content="Epoch futures">
 <meta name="twitter:description" content="Top crypto currency rank by yield">
 <meta name="twitter:image" content="image.png">
@@ -62,6 +60,11 @@
 </style>
 <style type="text/css">/* Chart.js */
   @keyframes chartjs-render-animation{from{opacity:.99}to{opacity:1}}.chartjs-render-monitor{animation:chartjs-render-animation 1ms}.chartjs-size-monitor,.chartjs-size-monitor-expand,.chartjs-size-monitor-shrink{position:absolute;direction:ltr;left:0;top:0;right:0;bottom:0;overflow:hidden;pointer-events:none;visibility:hidden;z-index:-1}.chartjs-size-monitor-expand>div{position:absolute;width:1000000px;height:1000000px;left:0;top:0}.chartjs-size-monitor-shrink>div{position:absolute;width:200%;height:200%;left:0;top:0}
+
+  table {
+      width: 100%;
+      table-layout: fixed;
+  }
 </style>
 
 <script async="" src="{{ url_for('static', filename = 'analytics.js') }}"></script><script src="{{ url_for('static', filename = 'Chart.js') }}" type="text/javascript"></script>
@@ -76,10 +79,10 @@
   <div class="navbar-nav-scroll">
     <ul class="navbar-nav bd-navbar-nav flex-row">
       <li class="nav-item">
-        <a class="nav-link " href="/">Yields</a>
+        <a class="nav-link active" href="/">Yields</a>
       </li>
       <li class="nav-item">
-        <a class="nav-link active" href="">Spreads</a>
+        <a class="nav-link" href="">Spreads</a>
       </li>
       <li class="nav-item">
         <a class="nav-link " href="">Nominals</a>
@@ -149,11 +152,12 @@
       <th scope="row">{{loop.index}}</th>
       <td>{{coin[0]}}</td>
       <td><div style="width:75%;"><div class="chartjs-size-monitor"><div class="chartjs-size-monitor-expand"><div class=""></div></div><div class="chartjs-size-monitor-shrink"><div class=""></div></div></div>
-	      <canvas class="yields" style="display: block; width: 180px; height: 180px;" width="180" height="180" class="chartjs-render-monitor"></canvas>
+	      <canvas class="yields" style="position:relative; width:'100%'; height:'100%';" width="100%" height="100%" class="chartjs-render-monitor"></canvas>
 
           <script type="text/javascript">
 
             var config = {
+                coin_name: '{{coin[0]}}',
 		        type: 'line',
 		        data: {
 			        labels: [{{coin[3]|safe}}],
@@ -170,6 +174,7 @@
                     ]
 		        },
 		        options: {
+                    responsive: true,
 			        legend: { display: false}
 		        }
 	        };
@@ -193,6 +198,11 @@
           $(yields).each(function (y,v){
               var ctx = v.getContext('2d');
               window.myLine = new Chart(ctx, configs[y]);
+              v.style.cursor = 'pointer';
+              v.onclick = function(e) {
+                  console.log("Clicked " + configs[y].coin_name)
+                  window.open('/yield_curve/*/'+configs[y].coin_name)
+              }
           })
 		  //
 		  //
