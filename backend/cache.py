@@ -9,8 +9,12 @@ def yield_agreement_data():
     agreements = list(DB.agreements.find({"$where": "this.maturityDate > this.creationTime"}).sort("maturityTime", pymongo.DESCENDING))
 
     print("Getting yields")
+    def collateral(agreement):
+        colat = agreement.get('effectiveCollateral', {})
+        return f"{colat.get('currentAmount', '')} {colat.get('tokenSymbol', '')}"
+
     yield_data = [(agreement["loanProtocol"], agreement["tokenSymbol"],datetime.strptime(agreement["creationTime"],date_format), agreement["interestRate"],
-                   term_minutes(agreement["loanTerm"]), datetime.strptime(agreement["maturityDate"], date_format)) for agreement in agreements]
+                   term_minutes(agreement["loanTerm"]), datetime.strptime(agreement["maturityDate"], date_format), collateral(agreement)) for agreement in agreements]
     
     return yield_data
     
