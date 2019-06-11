@@ -4,10 +4,10 @@
 from apscheduler.schedulers.background import BackgroundScheduler
 from flask import Flask
 
-from loanscan_io.endpoints import *
-from loanscan_io.mongodb import *
+from datetime import *
+from loanscan_io import *
 
-from functools import lru_cache
+import pymongo
 
 def sense_history():
     download_history('issuances')
@@ -32,62 +32,11 @@ from flask import render_template, send_from_directory
 
 app = Flask(__name__, template_folder='html', static_url_path='/static')
 
-import pymongo
-
-def term_pretty(seconds):
-    hour = 3600
-    day = 3600*24
-    if seconds < hour:
-        return "%dm" % (seconds/60)
-    if seconds < day:
-        return "%dh" % (seconds/3600)
-    return "%dd" % (seconds/day)
-
-def term_minutes(term):
-    parts = term.split(".")
-    
-    if len(parts) == 1:
-        days = 0
-        subparts = parts[0].split(":")
-    else:
-        days = int(parts[0])
-        subparts = parts[1].split(":")
-
-    hours = int(subparts[0])
-    minutes = int(subparts[1])
-        
-    return days*1440 + hours*60 + minutes
-
-@lru_cache(maxsize=256)
-def yield_agreement_data(protocol,symbol):
-    print("Getting agreements...")
-    agreements = list(db.agreements.find({"$where": "this.maturityDate > this.creationTime"}).sort("maturityTime", pymongo.DESCENDING))
-
-    print("Getting yields")
-    yield_data = [(agreement["loanProtocol"], agreement["tokenSymbol"],datetime.strptime(agreement["creationTime"],date_format), agreement["interestRate"],
-                   term_minutes(agreement["loanTerm"]), datetime.strptime(agreement["maturityDate"], date_format)) for agreement in agreements]
-
-    if symbol == "*" and protocol == "*":
-        return yield_data
-    
-    if symbol != "*" and protocol != "*":
-        return [y for y in yield_data if y[1] == symbol and y[0] == protocol]
-    
-    if symbol == "*":
-        return [y for y in yield_data if y[0] == protocol]
-    
-    if protocol == "*":
-        return [y for y in yield_data if y[1] == symbol]
-    
-def empty_cache():
-    print("Clearing cache")
-    yield_agreement_data.cache_clear()
-
+from server_cache import empty_cache, query_yield_data
 sched.add_job(empty_cache,'interval',minutes=240)
 
-
 def yield_plot(protocol, symbol, plot_past = True):
-    yield_data = yield_agreement_data(protocol,symbol)
+    yield_data = query_yield_data(protocol,symbol)
 
     print("Sorted yields .. ")
     print([y[2].strftime(date_format) for y in sorted(yield_data, key=lambda x: x[2])[0:5]])
@@ -139,8 +88,6 @@ def yield_curve(protocol, symbol):
     epochs = dict((term_pretty(k) + " ago", val) for k, val in epochs.items())
     return render_template('yield_curve.html', terms="[%s]" % ts , epochs="[%s]" % es, curves=epochs, time_ago_days=maturities)
 
-from datetime import *
-
 @app.route("/rate_spread/<protocol>/<symbol>")
 def rate_curve(protocol, symbol):
     # curve points
@@ -152,7 +99,7 @@ def rate_curve(protocol, symbol):
     borrow_curve_dots = []
     supply_curve_dots = []
     for t in timespots:
-        rates = list(db.interest_rates.find({
+        rates = list(DB.interest_rates.find({
             "snapshotTime": {"$lt": t.strftime(date_format)}
         }).sort("snapshotTime", pymongo.DESCENDING).limit(1))
 
@@ -173,7 +120,7 @@ def rate_curve(protocol, symbol):
 def index():
     coin_list = []
 
-    coins = list(db.agreements.distinct("tokenSymbol"))
+    coins = list(DB.agreements.distinct("tokenSymbol"))
 
     for coin in coins:
         epochs, maturities = yield_plot("*", coin)

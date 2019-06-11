@@ -3,14 +3,14 @@
   <head>
     <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<meta name="description" content="Get started with Bootstrap, the world’s most popular framework for building responsive, mobile-first sites, with BootstrapCDN and a template starter page.">
-<meta name="author" content="Mark Otto, Jacob Thornton, and Bootstrap contributors">
-<meta name="generator" content="Jekyll v3.8.5">
+<meta name="description" content="Descentralized loans data explorer">
+<meta name="author" content="c.lopez@kmels.net">
+<meta name="generator" content="epochfutures.loan">
 
 <meta name="docsearch:language" content="en">
 <meta name="docsearch:version" content="4.3">
 
-<title>Introduction · Bootstrap</title>
+<title>Epoch Futures - Loan data explorer</title>
 
 <link rel="canonical" href="http://epochfutures.loan">
 
@@ -144,6 +144,7 @@
     </script>
     
     {% for coin in coin_list %}
+    {% if coin[0] != None %}
     <tr>
       <th scope="row">{{loop.index}}</th>
       <td>{{coin[0]}}</td>
@@ -169,7 +170,7 @@
                     ]
 		        },
 		        options: {
-			        responsive: true,
+			        legend: { display: false}
 		        }
 	        };
             
@@ -178,6 +179,7 @@
 	    </div>
       </td>
     </tr>
+    {% endif %}
     {% endfor %}
     
   </tbody>
