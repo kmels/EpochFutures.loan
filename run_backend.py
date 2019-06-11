@@ -6,6 +6,7 @@ from flask import Flask
 
 from datetime import *
 from loanscan_io import *
+from backend import *
 
 import pymongo
 
@@ -32,7 +33,6 @@ from flask import render_template, send_from_directory
 
 app = Flask(__name__, template_folder='html', static_url_path='/static')
 
-from server_cache import empty_cache, query_yield_data
 sched.add_job(empty_cache,'interval',minutes=240)
 
 def yield_plot(protocol, symbol, plot_past = True):
@@ -77,16 +77,18 @@ def yield_plot(protocol, symbol, plot_past = True):
                 epochs[time_ago].append( avg*10000 ) # converto decimal to basis points (1% = 0.01 = 100 bps )
             else:
                 epochs[time_ago].append( curve_points[0][1]*10000)
-    return (epochs, maturities)
+
+    print("Yield plot")
+    return (epochs, maturities, yield_data)
 
 @app.route("/yield_curve/<protocol>/<symbol>")
 def yield_curve(protocol, symbol):
-    epochs, maturities = yield_plot(protocol, symbol, plot_past = True)
-
+    epochs, maturities, raw_data = yield_plot(protocol, symbol, plot_past = True)
+    
     ts = ",".join([repr(term_pretty(t)) for t in maturities])
     es = ",".join([repr(term_pretty(t)) for t in epochs.keys()])
     epochs = dict((term_pretty(k) + " ago", val) for k, val in epochs.items())
-    return render_template('yield_curve.html', terms="[%s]" % ts , epochs="[%s]" % es, curves=epochs, time_ago_days=maturities)
+    return render_template('yield_curve.html', terms="[%s]" % ts , epochs="[%s]" % es, curves=epochs, time_ago_days=maturities, agreement_list = raw_data)
 
 @app.route("/rate_spread/<protocol>/<symbol>")
 def rate_curve(protocol, symbol):
@@ -123,7 +125,7 @@ def index():
     coins = list(DB.agreements.distinct("tokenSymbol"))
 
     for coin in coins:
-        epochs, maturities = yield_plot("*", coin, plot_past = False)
+        epochs, maturities, raw_data = yield_plot("*", coin, plot_past = False)
         ts = ",".join([repr(term_pretty(t)) for t in maturities])
         es = ",".join([repr(term_pretty(t)) for t in epochs.keys()])
         epochs = dict((term_pretty(k) + " ago", val) for k, val in epochs.items())

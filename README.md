@@ -1,8 +1,8 @@
 Run
 ###
 
-´´´
-git clone git@github.com:kmels/loanspread.git
+```
+git clone git@github.com:kmels/EpochFutures.loan.git
 pip install apscheduler flask pymongo --user
-python ratespreads.py
-´´´
+python3 run_backend.py
+```

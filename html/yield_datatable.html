@@ -1,0 +1,39 @@
+
+<table id="example" class="table table-striped table-bordered" style="width:100%">
+  <thead>
+    <tr>
+      <th>Protocol</th>
+      <th>Symbol</th>
+      <th>Agreement time</th>
+      <th>Interest rate</th>
+      <th>Loan term</th>
+      <th>Maturity date</th>
+      <th>Collateral</th>
+    </tr>
+  </thead>
+  <tbody>
+
+    {% for ag in agreement_list %}
+    <tr>
+      <td>{{ag[0]}}</td>
+      <td>{{ag[1]}}</td>
+      <td>{{ag[2]}}</td>
+      <td>{{ag[3]}}</td>
+      <td>{{ag[4]}}</td>
+      <td>{{ag[5]}}</td>
+      <td>$112,000</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+  <tfoot>
+    <tr>
+      <th>Protocol</th>
+      <th>Symbol</th>
+      <th>Agreement time</th>
+      <th>Interest rate</th>
+      <th>Loan term</th>
+      <th>Maturity date</th>
+      <th>Collateral</th>
+    </tr>
+  </tfoot>
+</table>
