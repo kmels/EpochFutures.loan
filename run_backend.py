@@ -124,13 +124,24 @@ def index():
 
     coins = list(DB.agreements.distinct("tokenSymbol"))
 
+    latest_rates = list(DB.interest_rates.find({}).sort("snapshotTime", pymongo.DESCENDING).limit(1))
+    rates_today = latest_rates[0].get('interest_rates')
+    yesterday = datetime.utcnow() - timedelta(days=1)
+
+    rates_1d_ago = list(DB.interest_rates.find({
+            "snapshotTime": {"$gt": yesterday.strftime(date_format)}
+        }).sort("snapshotTime", pymongo.DESCENDING).limit(1))
+
     for coin in coins:
         epochs, maturities, raw_data = yield_plot("*", coin, plot_past = False)
         ts = ",".join([repr(term_pretty(t)) for t in maturities])
         es = ",".join([repr(term_pretty(t)) for t in epochs.keys()])
         epochs = dict((term_pretty(k) + " ago", val) for k, val in epochs.items())
 
-        coin_list.append((coin, epochs, maturities, ts, es))
+        borrow_rates = [(p['provider'],"%.2f" % (r['rate']*100)) for p in rates_today for r in p.get('borrow',[]) if r['symbol'] == coin]
+        lend_rates = [(p['provider'],"%.2f " % (r['rate']*100)) for p in rates_today for r in p.get('supply',[]) if r['symbol'] == coin]
+
+        coin_list.append((coin, epochs, maturities, ts, es, borrow_rates, lend_rates))
 
         #return render_template('yield_curve.html', terms="[%s]" % ts , epochs="[%s]" % es, curves=epochs, time_ago_days=maturities)
     return render_template('index.html', coin_list = coin_list)
