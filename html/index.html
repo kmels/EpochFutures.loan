@@ -13,7 +13,6 @@
       <th scope="col">Borrow Rate</th>
       <th scope="col">Plot</th>
       <th scope="col">24h change</th>
-      <th scope="col">24h spread</th>
     </tr>
   </thead>
   <tbody>
@@ -27,71 +26,65 @@
     </script>
     
     {% for coin in coin_list %}
-    {% if coin[0] != None %}
     <tr>
-      <th scope="row">{{loop.index}}</th>
-      <td>{{coin[0]}}</td>
-      <td>*</td>
-      <td>
-        <table>
-          {% for pr in coin[5] %}
-          <tr>
-            <td>{{pr[0]}}</td>
-            <td>{{pr[1]}} %</td>
-          </tr>
-          {% endfor %}
-        </table>
-      </td>
-      <td>
-        <table>
-          {% for pr in coin[6] %}
-          <tr>
-            <td>{{pr[0]}}</td>
-            <td>{{pr[1]}} %</td>
-          </tr>
-          {% endfor %}
-        </table>
-      </td>
-      <td><div style="width:100%;"><div class="chartjs-size-monitor"><div class="chartjs-size-monitor-expand"><div class=""></div></div><div class="chartjs-size-monitor-shrink"><div class=""></div></div></div>
+      <th rowspan="{{protocol_len[coin[0]] + 1}}" scope="row">{{loop.index}}</th>
+      <td rowspan="{{protocol_len[coin[0]] + 1}}">{{coin[0]}}</td>
+
+      {% if protocol == '*' %}
+      <th></th>
+      {% else %}
+      <td>{{protocol}}</td>
+      {% endif %}
+
+      <th>
+      </th>
+      <th>
+      </th>
+      <td rowspan="{{protocol_len[coin[0]] + 1}}"><div style="width:100%;"><div class="chartjs-size-monitor"><div class="chartjs-size-monitor-expand"><div class=""></div></div><div class="chartjs-size-monitor-shrink"><div class=""></div></div></div>
 	      <canvas class="yields" style="position:relative; width:'100%'; height:'100%';" width="100%" height="100%" class="chartjs-render-monitor"></canvas>
-
-          <script type="text/javascript">
-
-            var config = {
-                coin_name: '{{coin[0]}}',
-		        type: 'line',
-		        data: {
-			        labels: [{{coin[3]|safe}}],
-			        datasets: [
-                        {% for k,v in coin[1].items(): %}
-                        {
-                            label: '{{k}}',
-                            fill: false,
-                            data: {{v|safe}},
-                            backgroundColor : colors[{{loop.index0}}],
-                            borderColor : colors[{{loop.index0}}]
-                        },
-                        {% endfor %}
-                    ]
-		        },
-		        options: {
-                    responsive: true,
-			        legend: { display: false}
-		        }
-	        };
-            
-            configs.push(config);
-          </script>
 	    </div>
       </td>
+      <td rowspan="{{protocol_len[coin[0]] + 1}}"></td>
     </tr>
-    {% endif %}
+
+    {% for protocol in protocols[coin[0]] %}
+    <tr>
+      <td>{{protocol}}</td>
+      <td>{{coin[5].get(protocol,'')}}</td>
+      <td>{{coin[6].get(protocol,'')}}</td>
+    </tr>
     {% endfor %}
-    
+    {% endfor %}
   </tbody>
 </table>
 
 <script type="text/javascript">
+
+  {% for coin in coin_list %}
+
+  configs.push({
+      coin_name: '{{coin[0]}}',
+	  type: 'line',
+	  data: {
+		  labels: [{{coin[3]|safe}}],
+		  datasets: [
+              {% for k,v in coin[1].items(): %}
+              {
+                  label: '{{k}}',
+                  fill: false,
+                  data: {{v|safe}},
+                  backgroundColor : colors[{{loop.index0}}],
+                  borderColor : colors[{{loop.index0}}]
+              },
+              {% endfor %}
+          ]
+	  },
+	  options: {
+          responsive: true,
+		  legend: { display: false}
+	  }
+  });
+  {% endfor %}
 
   window.onload = function() {
       var yields = document.getElementsByClassName('yields')
@@ -105,8 +98,6 @@
               window.open('/yield_curve/*/'+configs[y].coin_name, "_self")
           }
       })
-	  //
-	  //
   };
 </script>
 

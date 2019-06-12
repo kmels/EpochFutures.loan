@@ -88,7 +88,9 @@ def yield_curve(protocol, symbol):
     ts = ",".join([repr(term_pretty(t)) for t in maturities])
     es = ",".join([repr(term_pretty(t)) for t in epochs.keys()])
     epochs = dict((term_pretty(k) + " ago", val) for k, val in epochs.items())
-    return render_template('yield_curve.html', terms="[%s]" % ts , epochs="[%s]" % es, curves=epochs, time_ago_days=maturities, agreement_list = raw_data, term_pretty = term_pretty)
+    coin_protocols = dict([(coin[0],max(coin[5],coin[6])) for coin in coin_list])
+
+    return render_template('yield_curve.html', terms="[%s]" % ts , epochs="[%s]" % es, curves=epochs, time_ago_days=maturities, agreement_list = raw_data, term_pretty = term_pretty, coin_protocols = coin_protocols)
 
 @app.route("/rate_spread/<protocol>/<symbol>")
 def rate_curve(protocol, symbol):
@@ -119,7 +121,7 @@ def rate_curve(protocol, symbol):
     return render_template('rate_spread.html', borrow_dots=",".join(map(str,borrow_curve_dots)), supply_dots=",".join(map(str, supply_curve_dots)))
 
 @app.route("/")
-def index():
+def index(protocol = '*'):
     coin_list = []
 
     coins = list(DB.agreements.distinct("tokenSymbol"))
@@ -133,18 +135,26 @@ def index():
         }).sort("snapshotTime", pymongo.DESCENDING).limit(1))
 
     for coin in coins:
+        if not coin:
+            continue
         epochs, maturities, raw_data = yield_plot("*", coin, plot_past = False)
         ts = ",".join([repr(term_pretty(t)) for t in maturities])
         es = ",".join([repr(term_pretty(t)) for t in epochs.keys()])
         epochs = dict((term_pretty(k) + " ago", val) for k, val in epochs.items())
 
-        borrow_rates = [(p['provider'],"%.2f" % (r['rate']*100)) for p in rates_today for r in p.get('borrow',[]) if r['symbol'] == coin]
-        lend_rates = [(p['provider'],"%.2f " % (r['rate']*100)) for p in rates_today for r in p.get('supply',[]) if r['symbol'] == coin]
+        borrow_rates = dict([(p['provider'],"%.2f" % (r['rate']*100)) for p in rates_today for r in p.get('borrow',[]) if r['symbol'] == coin])
+        lend_rates = dict([(p['provider'],"%.2f " % (r['rate']*100)) for p in rates_today for r in p.get('supply',[]) if r['symbol'] == coin])
 
         coin_list.append((coin, epochs, maturities, ts, es, borrow_rates, lend_rates))
 
-        #return render_template('yield_curve.html', terms="[%s]" % ts , epochs="[%s]" % es, curves=epochs, time_ago_days=maturities)
-    return render_template('index.html', coin_list = coin_list)
+    if protocol == '*':
+        coin_protocols = dict([(coin[0], set(list(coin[5].keys()) + list(coin[6].keys()))) for coin in coin_list])
+        coin_protocol_len = dict([(coin, len(protocols)) for coin,protocols in coin_protocols.items()])
+    else:
+        coin_protocol_len = dict([(coin[0],1) for coin in coin_list])
+        coin_protocols = dict([(coin[0], protocol) for coin in coin_list])
+
+    return render_template('index.html', coin_list = coin_list, protocol = protocol, protocol_len = coin_protocol_len, protocols = coin_protocols)
     
 if __name__ == "__main__":
     app.run(debug=True)
