@@ -1,127 +1,7 @@
-<html lang="en">
 
-  <head>
-    <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<meta name="description" content="Descentralized loans data explorer">
-<meta name="author" content="c.lopez@kmels.net">
-<meta name="generator" content="epochfutures.loan">
+{% extends "base.html" %}
 
-<meta name="docsearch:language" content="en">
-<meta name="docsearch:version" content="4.3">
-
-<title>Epoch Futures - Loan data explorer</title>
-
-<link rel="canonical" href="http://epochfutures.loan">
-
-<!-- Bootstrap core CSS -->
-<style class="anchorjs"></style><link href="https://getbootstrap.com/docs/4.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
-<!-- Documentation extras -->
-
-<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
-<link href="https://cdn.jsdelivr.net/npm/docsearch.js@2/dist/cdn/docsearch.min.css" rel="stylesheet">
-<link href="https://getbootstrap.com/docs/4.3/assets/css/docs.min.css" rel="stylesheet">
-
-<!-- todo favicon -->
-
-<!-- todo twitter -->
-<meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="Epoch futures">
-<meta name="twitter:description" content="Top crypto currency rank by yield">
-<meta name="twitter:image" content="image.png">
-
-<!-- todo facebook -->
-<meta property="og:url" content="https:///">
-<meta property="og:title" content="Epoch futures">
-<meta property="og:description" content="Yield curves of crypto markets.">
-<meta property="og:type" content="website">
-<meta property="og:image" content="http://epochfutures.png">
-<meta property="og:image:secure_url" content="https://epochfutures.png">
-<meta property="og:image:type" content="image/png">
-<meta property="og:image:width" content="1200">
-<meta property="og:image:height" content="630">
-
-<!-- todo googleanalytics -->
-  
-
-<link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css" rel="stylesheet">
-
-<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
-<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
-
-<!-- BEGIN CHART.JS CODEINCLUDE -->
-<style>
-  canvas{
-	  -moz-user-select: none;
-	  -webkit-user-select: none;
-	  -ms-user-select: none;
-  }
-</style>
-<style type="text/css">/* Chart.js */
-  @keyframes chartjs-render-animation{from{opacity:.99}to{opacity:1}}.chartjs-render-monitor{animation:chartjs-render-animation 1ms}.chartjs-size-monitor,.chartjs-size-monitor-expand,.chartjs-size-monitor-shrink{position:absolute;direction:ltr;left:0;top:0;right:0;bottom:0;overflow:hidden;pointer-events:none;visibility:hidden;z-index:-1}.chartjs-size-monitor-expand>div{position:absolute;width:1000000px;height:1000000px;left:0;top:0}.chartjs-size-monitor-shrink>div{position:absolute;width:200%;height:200%;left:0;top:0}
-
-  table {
-      width: 100%;
-      table-layout: fixed;
-  }
-</style>
-
-<script async="" src="{{ url_for('static', filename = 'analytics.js') }}"></script><script src="{{ url_for('static', filename = 'Chart.js') }}" type="text/javascript"></script>
-<script src="{{ url_for('static', filename = 'utils.js') }}" type="text/javascript"></script>
-<!-- END CHART.S CODE INCLUDE -->
-
-  </head>
-  <body>
-<header class="navbar navbar-expand navbar-dark flex-column flex-md-row bd-navbar">
-  <a class="navbar-brand mr-0 mr-md-2" href="/" aria-label="Bootstrap">EpochFutures.loan</a>
-
-  <div class="navbar-nav-scroll">
-    <ul class="navbar-nav bd-navbar-nav flex-row">
-      <li class="nav-item">
-        <a class="nav-link active" href="/">Yields</a>
-      </li>
-      <li class="nav-item">
-        <a class="nav-link" href="">Spreads</a>
-      </li>
-      <li class="nav-item">
-        <a class="nav-link " href="">Nominals</a>
-      </li>
-      <!-- todo blog -->
-    </ul>
-  </div>
-
-  <ul class="navbar-nav flex-row ml-md-auto d-none d-md-flex">
-    <li class="nav-item dropdown">
-      <a class="nav-item nav-link dropdown-toggle mr-md-2" href="#" id="bd-versions" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-        All
-      </a>
-      <div class="dropdown-menu dropdown-menu-right" aria-labelledby="bd-versions">
-
-        <a class="dropdown-item" href="">DAI</a>
-        <a class="dropdown-item" href="">EtH</a>
-
-        <div class="dropdown-divider"></div>
-        <a class="dropdown-item active" href="/docs/versions/">Any coin</a>
-                
-        <div class="dropdown-divider"></div>
-        
-        <a class="dropdown-item" href="">Dharma</a>
-        <a class="dropdown-item" href="">dXdY</a>
-        
-        <div class="dropdown-divider"></div>
-        <a class="dropdown-item active" href="/docs/versions/">Any protocol</a>
-      </div>
-    </li>
-
-    <li class="nav-item">
-      <a class="nav-link p-2" href="https://github.com/kmels/epochfutures.loan" target="_blank" rel="noopener" aria-label="GitHub"><svg xmlns="http://www.w3.org/2000/svg" class="navbar-nav-svg" viewBox="0 0 512 499.36" role="img" focusable="false"><title>GitHub</title><path fill="currentColor" fill-rule="evenodd" d="M256 0C114.64 0 0 114.61 0 256c0 113.09 73.34 209 175.08 242.9 12.8 2.35 17.47-5.56 17.47-12.34 0-6.08-.22-22.18-.35-43.54-71.2 15.49-86.2-34.34-86.2-34.34-11.64-29.57-28.42-37.45-28.42-37.45-23.27-15.84 1.73-15.55 1.73-15.55 25.69 1.81 39.21 26.38 39.21 26.38 22.84 39.12 59.92 27.82 74.5 21.27 2.33-16.54 8.94-27.82 16.25-34.22-56.84-6.43-116.6-28.43-116.6-126.49 0-27.95 10-50.8 26.35-68.69-2.63-6.48-11.42-32.5 2.51-67.75 0 0 21.49-6.88 70.4 26.24a242.65 242.65 0 0 1 128.18 0c48.87-33.13 70.33-26.24 70.33-26.24 14 35.25 5.18 61.27 2.55 67.75 16.41 17.9 26.31 40.75 26.31 68.69 0 98.35-59.85 120-116.88 126.32 9.19 7.9 17.38 23.53 17.38 47.41 0 34.22-.31 61.83-.31 70.23 0 6.85 4.61 14.81 17.6 12.31C438.72 464.97 512 369.08 512 256.02 512 114.62 397.37 0 256 0z"></path></svg></a>
-    </li>
-
-  </ul>
-
-  <a class="btn btn-bd-download d-none d-lg-inline-block mb-3 mb-md-0 ml-md-3" href="/docs/4.3/getting-started/download/">Download</a>
-</header>
+{%block content %}
 
 <table class="table">
   <thead>
@@ -161,7 +41,7 @@
           </tr>
           {% endfor %}
         </table>
-        </td>
+      </td>
       <td>
         <table>
           {% for pr in coin[6] %}
@@ -211,24 +91,23 @@
   </tbody>
 </table>
 
-   <script type="text/javascript">
+<script type="text/javascript">
 
-	  window.onload = function() {
-          var yields = document.getElementsByClassName('yields')
+  window.onload = function() {
+      var yields = document.getElementsByClassName('yields')
 
-          $(yields).each(function (y,v){
-              var ctx = v.getContext('2d');
-              window.myLine = new Chart(ctx, configs[y]);
-              v.style.cursor = 'pointer';
-              v.onclick = function(e) {
-                  console.log("Clicked " + configs[y].coin_name)
-                  window.open('/yield_curve/*/'+configs[y].coin_name)
-              }
-          })
-		  //
-		  //
-	  };
-	</script>
-    
-</body>
-</html>
+      $(yields).each(function (y,v){
+          var ctx = v.getContext('2d');
+          window.myLine = new Chart(ctx, configs[y]);
+          v.style.cursor = 'pointer';
+          v.onclick = function(e) {
+              console.log("Clicked " + configs[y].coin_name)
+              window.open('/yield_curve/*/'+configs[y].coin_name, "_self")
+          }
+      })
+	  //
+	  //
+  };
+</script>
+
+{% endblock %}
