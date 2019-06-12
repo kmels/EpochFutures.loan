@@ -35,50 +35,76 @@ app = Flask(__name__, template_folder='html', static_url_path='/static')
 
 sched.add_job(empty_cache,'interval',minutes=240)
 
-def yield_plot(protocol, symbol, plot_past = True):
+#maturities = [3600, 7200, 86400, 86400*28, 86400*30, 86400*90, 86400*180] # in seconds
+maturities = sorted([term_seconds(a) for a in list(DB.agreements.distinct("loanTerm", {"interestRate": {"$gt": 0}}))])
+
+
+print(maturities)
+
+def get_epoch_agreements(agreements, delta):
+    timespot = datetime.utcnow() - delta
+    return [a for a in agreements if a[2] <= timespot]
+
+def get_protocol_agreements(agreements, protocol):
+    return [a for a in agreements if a[0] == protocol]
+
+import numpy as np
+def get_agreements_maturities_yields(agreements):
+    yields = []
+    age_sorted = sorted(agreements, key = lambda y: y[2], reverse=True)
+    time_ago_sorted = sorted(age_sorted, key=lambda y: y[4]) #y[4] is loan term in seconds
+
+    for m in maturities:
+        maturity_points = [(y[4],y[3]) for y in time_ago_sorted if m == y[4]]
+        if len(maturity_points) == 0:
+            yields.append("-")
+            continue
+
+        same_maturity_dots = [y for y in maturity_points if y[0] == m]
+        if len(same_maturity_dots) > 0:
+            ys = [c[1] for c in same_maturity_dots]
+            avg = 1.0*sum(ys) / len(same_maturity_dots)
+            median = np.median(ys)
+            yields.append( median*10000 )
+        else:
+            yields.append( curve_points[0][1]*10000)
+
+    assert(len(maturities) == len(yields))
+    return yields
+
+def yield_plot(protocol, symbol, plot_past = False):
+    """
+    If nprotocol is *, returns timeseries of all protocols if plot_past is False
+    """
     yield_data = query_yield_data(protocol,symbol)
 
-    print("Sorted yields .. ")
-    print([y[2].strftime(date_format) for y in sorted(yield_data, key=lambda x: x[2])[0:5]])
-    print("Getting deltas...")
-
     if plot_past:
-        timespot_diffs = [timedelta(hours=1), timedelta(hours=2), timedelta(hours=4), timedelta(days=1), timedelta(days=7)]
-    else:
-        timespot_diffs = [timedelta(seconds=0)]
+        timespot_diffs = [timedelta(days=1), timedelta(days=7), timedelta(days=14), timedelta(days=30), timedelta(days=45), timedelta(days=60)]
 
-    time_now = datetime.utcnow()
+    zero_delta = timedelta(seconds=0)
 
     epochs = {}
-    for d in timespot_diffs:
-        epochs[int(d.total_seconds())] = []
+    if protocol == '*' and not plot_past:
 
-    print("Getting curves...")
-    maturities = [3600, 7200, 86400, 86400*28, 86400*30, 86400*90, 86400*180] # in seconds
-    
-    for delta in timespot_diffs:
-        timespot = time_now - delta
-        time_ago = int(delta.total_seconds())
+        protocols = coin_agreement_protocols(symbol)
+        for p in protocols:
+            ags = get_protocol_agreements(yield_data, p)
 
-        agreements_before = [y for y in yield_data if y[2] <= timespot] #y[2] is creation time
-        age_sorted = sorted(agreements_before, key = lambda y: y[2], reverse=True)
+            curve = get_agreements_maturities_yields(ags)
+
+            epochs[p] = curve
+    else:
+        for d in timespot_diffs:
+            epochs[int(d.total_seconds())] = []
+
+        for delta in timespot_diffs:
+            time_ago = int(delta.total_seconds())
         
-        time_ago_sorted = sorted(age_sorted, key=lambda y: y[4]) #y[4] is loan term in seconds
-                
-        for m in maturities:
-            curve_points = [(y[4],y[3]) for y in time_ago_sorted if m == y[4]]
-            if len(curve_points) == 0:
-                epochs[time_ago].append(0)
-                continue
-            
-            same_time_ago_dots = [y for y in curve_points if y[0] == m]
-            if len(same_time_ago_dots) > 0:
-                avg = 1.0*sum([c[1] for c in same_time_ago_dots]) / len(same_time_ago_dots)
-                epochs[time_ago].append( avg*10000 ) # converto decimal to basis points (1% = 0.01 = 100 bps )
-            else:
-                epochs[time_ago].append( curve_points[0][1]*10000)
+            ags = get_epoch_agreements(yield_data, delta)
 
-    print("Yield plot")
+            curve = get_agreements_maturities_yields(ags)
+
+            epochs[time_ago] = curve
     return (epochs, maturities, yield_data)
 
 @app.route("/yield_curve/<protocol>/<symbol>")
@@ -138,8 +164,8 @@ def index(protocol = '*'):
             continue
         epochs, maturities, raw_data = yield_plot("*", coin, plot_past = False)
         ts = ",".join([repr(term_pretty(t)) for t in maturities])
-        es = ",".join([repr(term_pretty(t)) for t in epochs.keys()])
-        epochs = dict((term_pretty(k) + " ago", val) for k, val in epochs.items())
+        es = ",".join([p for p in epochs.keys()])
+        epochs = dict((p, val) for p, val in epochs.items())
 
         borrow_rates = dict([(p['provider'],"%.2f" % (r['rate']*100)) for p in rates_today for r in p.get('borrow',[]) if r['symbol'] == coin])
         lend_rates = dict([(p['provider'],"%.2f " % (r['rate']*100)) for p in rates_today for r in p.get('supply',[]) if r['symbol'] == coin])
