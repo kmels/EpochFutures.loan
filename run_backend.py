@@ -88,9 +88,8 @@ def yield_curve(protocol, symbol):
     ts = ",".join([repr(term_pretty(t)) for t in maturities])
     es = ",".join([repr(term_pretty(t)) for t in epochs.keys()])
     epochs = dict((term_pretty(k) + " ago", val) for k, val in epochs.items())
-    coin_protocols = dict([(coin[0],max(coin[5],coin[6])) for coin in coin_list])
 
-    return render_template('yield_curve.html', terms="[%s]" % ts , epochs="[%s]" % es, curves=epochs, time_ago_days=maturities, agreement_list = raw_data, term_pretty = term_pretty, coin_protocols = coin_protocols)
+    return render_template('yield_curve.html', terms="[%s]" % ts , epochs="[%s]" % es, curves=epochs, time_ago_days=maturities, agreement_list = raw_data, term_pretty = term_pretty)
 
 @app.route("/rate_spread/<protocol>/<symbol>")
 def rate_curve(protocol, symbol):
